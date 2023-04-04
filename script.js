@@ -15,7 +15,7 @@ function setup() {
     }
   }
   shape = createRandomShape();
-  shapeX = floor(boardWidth / 2) - floor(shape[0].length / 2);
+  shapeX = floor(boardWidth / 2) - floor(shape.data[0].length / 2);
   shapeY = 0;
 }
 
@@ -23,9 +23,9 @@ function drawBoard() {
   for (let y = 0; y < boardHeight; y++) {
     for (let x = 0; x < boardWidth; x++) {
       if (board[y][x]) {
-        fill(0);
+        fill(board[y][x]);
       } else {
-        fill(255);
+        fill(0);
       }
       rect(x * blockSize, y * blockSize, blockSize, blockSize);
       stroke(200);
@@ -48,9 +48,9 @@ function keyPressed() {
       shapeY++;
     }
   } else if (keyCode === UP_ARROW) {
-    const rotatedShape = rotateShape(shape);
+    const rotatedShape = rotateShape(shape.data);
     if (!collision(0, 0, rotatedShape)) {
-      shape = rotatedShape;
+      shape.data = rotatedShape;
     }
   }
 }
@@ -69,6 +69,15 @@ function rotateShape(s) {
   return result;
 }
 
+const shapeColors = [
+  [255, 0, 0],
+  [0, 255, 0],
+  [0, 0, 255],
+  [255, 255, 0],
+  [255, 0, 255],
+  [0, 255, 255],
+  [128, 0, 255],
+];
 
 const shapes = [
   [
@@ -103,15 +112,19 @@ const shapes = [
 ];
 
 function createRandomShape() {
-  const shape = shapes[floor(random(0, shapes.length))];
+  const index = floor(random(0, shapes.length));
+  const shape = {
+    data: shapes[index],
+    color: shapeColors[index],
+  };
   return shape;
 }
 
 function drawShape() {
-  for (let y = 0; y < shape.length; y++) {
-    for (let x = 0; x < shape[y].length; x++) {
-      if (shape[y][x]) {
-        fill(0);
+  for (let y = 0; y < shape.data.length; y++) {
+    for (let x = 0; x < shape.data[y].length; x++) {
+      if (shape.data[y][x]) {
+        fill(shape.color);
         rect((shapeX + x) * blockSize, (shapeY + y) * blockSize, blockSize, blockSize);
       }
     }
@@ -119,7 +132,7 @@ function drawShape() {
 }
 
 // Check for collisions
-function collision(offsetX, offsetY, s = shape) {
+function collision(offsetX, offsetY, s = shape.data) { // Change this line
   for (let y = 0; y < s.length; y++) {
     for (let x = 0; x < s[y].length; x++) {
       if (s[y][x]) {
@@ -136,10 +149,10 @@ function collision(offsetX, offsetY, s = shape) {
 
 // Lock shape to the board and check for line completion
 function lockShapeToBoard() {
-  for (let y = 0; y < shape.length; y++) {
-    for (let x = 0; x < shape[y].length; x++) {
-      if (shape[y][x]) {
-        board[shapeY + y][shapeX + x] = 1;
+  for (let y = 0; y < shape.data.length; y++) {
+    for (let x = 0; x < shape.data[y].length; x++) {
+      if (shape.data[y][x]) {
+        board[shapeY + y][shapeX + x] = shape.color;
       }
     }
   }
@@ -176,11 +189,12 @@ function gameLoop() {
     } else {
       lockShapeToBoard();
       shape = createRandomShape();
-      shapeX = floor(boardWidth / 2) - floor(shape[0].length / 2);
+      shapeX = floor(boardWidth / 2) - floor(shape.data[0].length / 2);
       shapeY = 0;
 
       if (collision(0, 0)) {
         console.log("Game Over!");
+        gameStarted = false;
         noLoop();
       }
     }
@@ -188,8 +202,9 @@ function gameLoop() {
   }
 }
 
+
 function draw() {
-  background(255);
+  background(0);
   drawBoard();
   drawShape();
   gameLoop();
