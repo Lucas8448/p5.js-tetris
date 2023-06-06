@@ -5,6 +5,11 @@ const board = [];
 let shape;
 let shapeX;
 let shapeY;
+let keyRepeatDelay = 200;
+let keyRepeatSpeed = 50;
+
+let keyState = {};
+let keyTime = {};
 
 function setup() {
   createCanvas(blockSize * boardWidth, blockSize * boardHeight);
@@ -39,18 +44,26 @@ function keyPressed() {
     if (!collision(-1, 0)) {
       shapeX--;
     }
-  } else if (keyCode === RIGHT_ARROW) {
+  }
+  if (keyCode === RIGHT_ARROW) {
     if (!collision(1, 0)) {
       shapeX++;
     }
-  } else if (keyCode === DOWN_ARROW) {
+  }
+  if (keyCode === DOWN_ARROW) {
     if (!collision(0, 1)) {
       shapeY++;
     }
-  } else if (keyCode === UP_ARROW) {
+  }
+  if (keyCode === UP_ARROW) {
     const rotatedShape = rotateShape(shape.data);
     if (!collision(0, 0, rotatedShape)) {
       shape.data = rotatedShape;
+    }
+  }
+  if (keyCode === 32) {
+    while (!collision(0, 1)) {
+      shapeY++;
     }
   }
 }
@@ -108,7 +121,7 @@ const shapes = [
     [0, 1, 0],
     [0, 1, 0],
     [1, 1, 0],
-  ],
+  ]
 ];
 
 function createRandomShape() {
@@ -200,8 +213,27 @@ function gameLoop() {
     }
     prevDropTime = currentTime;
   }
+  handleContinuousMovement(LEFT_ARROW, -1, 0);
+  handleContinuousMovement(RIGHT_ARROW, 1, 0);
+  handleContinuousMovement(DOWN_ARROW, 0, 1);
 }
 
+function handleContinuousMovement(keyCode, offsetX, offsetY) {
+  if (keyIsDown(keyCode)) {
+    if (!keyState[keyCode]) {
+      keyState[keyCode] = true;
+      keyTime[keyCode] = millis() + keyRepeatDelay;
+    } else if (millis() > keyTime[keyCode]) {
+      keyTime[keyCode] = millis() + keyRepeatSpeed;
+      if (!collision(offsetX, offsetY)) {
+        if (offsetX != 0) shapeX += offsetX;
+        else shapeY += offsetY;
+      }
+    }
+  } else {
+    keyState[keyCode] = false;
+  }
+}
 
 function draw() {
   background(0);
